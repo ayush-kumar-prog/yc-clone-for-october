@@ -1,215 +1,88 @@
+// Variant B: Simplified signup form
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 
-const MyScreen = () => {
-  const [step, setStep] = useState('signup');
+const SignupFormB = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [company, setCompany] = useState('');
-  const [role, setRole] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignup = () => {
-    if (email && password) {
-      setStep('welcome');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    // Track signup_started event
+    window.posthog?.capture('signup_started');
+    
+    try {
+      // Your signup API call here
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (response.ok) {
+        window.posthog?.capture('signup_completed');
+        // Redirect to post-signup profile step
+        window.location.href = '/welcome/profile';
+      }
+    } catch (error) {
+      console.error('Signup failed:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCompleteProfile = () => {
-    setStep('complete');
-  };
-
-  const handleSkip = () => {
-    setStep('complete');
-  };
-
-  if (step === 'welcome') {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome!</Text>
-        </View>
-
-        <View style={styles.content}>
-          <Text style={styles.welcomeMessage}>
-            Help us personalize your experience (optional)
-          </Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Full Name"
-            value={name}
-            onChangeText={setName}
-            placeholderTextColor="#999"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Company"
-            value={company}
-            onChangeText={setCompany}
-            placeholderTextColor="#999"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Role"
-            value={role}
-            onChangeText={setRole}
-            placeholderTextColor="#999"
-          />
-
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#4CAF50', marginTop: 20 }]}
-            onPress={handleCompleteProfile}
-          >
-            <Text style={styles.buttonText}>Complete Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={handleSkip}
-          >
-            <Text style={styles.resetText}>Skip for now</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  if (step === 'complete') {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>You're all set!</Text>
-        </View>
-
-        <View style={styles.content}>
-          <Text style={[styles.counter, { color: '#4CAF50' }]}>
-            ✓
-          </Text>
-          <Text style={styles.message}>
-            Your account has been created successfully
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Sign Up</Text>
-      </View>
-
-      <View style={styles.content}>
-        <Text style={styles.message}>
-          Create your account in seconds
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholderTextColor="#999"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholderTextColor="#999"
-        />
-
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: '#4CAF50', marginTop: 30 }]}
-          onPress={handleSignup}
+    <div className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-2">Get Started</h1>
+      <p className="text-gray-600 mb-6">Create your account in seconds</p>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-1">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="you@company.com"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-1">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="At least 8 characters"
+          />
+        </div>
+        
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
         >
-          <Text style={styles.buttonText}>Get Started</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          {loading ? 'Creating account...' : 'Get Started'}
+        </button>
+      </form>
+      
+      <p className="text-xs text-gray-500 mt-4">
+        By signing up, you agree to our Terms of Service and Privacy Policy
+      </p>
+    </div>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: "#2196F3",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  counter: {
-    fontSize: 80,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  message: {
-    fontSize: 18,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 40,
-  },
-  welcomeMessage: {
-    fontSize: 18,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  button: {
-    width: '100%',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  resetButton: {
-    backgroundColor: "#757575",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  resetText: {
-    color: "white",
-    fontSize: 16,
-  },
-});
-
-export default MyScreen;
+export default SignupFormB;
